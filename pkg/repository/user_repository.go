@@ -39,7 +39,7 @@ func (r *UserRepository) FindByHospitalID(ctx context.Context, hospitalID string
 	var user models.User
 	if err := r.db.WithContext(ctx).Joins("JOIN patients ON patients.user_id = users.id").Where("patients.hospital_id = ?", hospitalID).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, nil
+			return nil, err
 		}
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (r *UserRepository) FindPatientByID(ctx context.Context, id string) (*model
 	var user models.User
 	if err := r.db.WithContext(ctx).Preload("Patient").Where("id = ?", id).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, nil
+			return nil, err
 		}
 
 	}
@@ -62,7 +62,7 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*models
 	var user models.User
 	if err := r.db.WithContext(ctx).Where("email = ?", email).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, nil
+			return nil, err
 		}
 		return nil, err
 	}

@@ -98,6 +98,9 @@ func (s *UserService) PatientLogin(ctx context.Context, body *dto.PatientLoginRe
 
 func (s *UserService) GetProfileByID(ctx context.Context, userID string) (*dto.GetProfileResponseDto, error) {
 	user, err := s.userRepository.FindPatientByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
 	res := &dto.GetProfileResponseDto{
 		FirstName:        user.FirstName,
 		LastName:         user.LastName,
