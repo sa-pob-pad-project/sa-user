@@ -1,16 +1,12 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE SCHEMA IF NOT EXISTS "user";
-
-SET search_path TO "user";
-
-CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA "user";
-
 CREATE TYPE roles AS ENUM ('patient','doctor','admin');
 CREATE TYPE gender_enum AS ENUM ('male','female');
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE users (
-  id uuid PRIMARY KEY DEFAULT "user".gen_random_uuid(),
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   password text NOT NULL,
   first_name text NOT NULL,
   last_name text NOT NULL,
@@ -62,23 +58,18 @@ CREATE TABLE admins (
   user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   username text UNIQUE NOT NULL
 );
+
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-SET search_path TO "user";
-
 DROP TABLE IF EXISTS user_healthcare_entitlement;
 DROP TABLE IF EXISTS healthcare_entitlements;
 DROP TABLE IF EXISTS patients;
 DROP TABLE IF EXISTS doctors;
 DROP TABLE IF EXISTS admins;
 DROP TABLE IF EXISTS users;
-
 DROP TYPE IF EXISTS roles;
 DROP TYPE IF EXISTS gender_enum;
-
 DROP EXTENSION IF EXISTS pgcrypto;
-
-DROP SCHEMA IF EXISTS "user";
 -- +goose StatementEnd
