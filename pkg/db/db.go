@@ -29,7 +29,7 @@ func Open(cfg Config) *gorm.DB {
 			Colorful:      true,        // Enable color
 		},
 	)
-	con := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s search_path=user", cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Dbname, cfg.Sslmode)
+	con := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Dbname, cfg.Sslmode)
 	db, err := gorm.Open(postgres.Open(con), &gorm.Config{
 		Logger: newLogger,
 	})
