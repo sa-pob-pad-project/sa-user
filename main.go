@@ -76,7 +76,6 @@ func main() {
 		},
 	})
 
-	// Enable CORS middleware
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
