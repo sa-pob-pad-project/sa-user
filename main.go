@@ -18,6 +18,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 // @title User API
@@ -74,6 +75,12 @@ func main() {
 			return nil
 		},
 	})
+
+	// Enable CORS middleware
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+	}))
 
 	routes.SetupRoutes(app, userHandler, jwtService)
 	port := config.Get("APP_PORT", "8000")
