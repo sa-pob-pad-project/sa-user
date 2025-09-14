@@ -70,6 +70,8 @@ func (h *UserHandler) PatientLogin(ctx *fiber.Ctx) error {
 	ctx.Cookie(&fiber.Cookie{
 		Name:  "access_token",
 		Value: res.AccessToken,
+		HTTPOnly: true,
+		SameSite: "None",
 	})
 	return response.OK(ctx, res)
 }

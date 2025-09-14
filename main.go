@@ -79,6 +79,7 @@ func main() {
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+		AllowCredentials: true,
 	}))
 
 	routes.SetupRoutes(app, userHandler, jwtService)
