@@ -2,14 +2,18 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"reflect"
-	"user-service/cmd"
+
+	// "user-service/cmd"
 	"user-service/pkg/config"
-	"user-service/pkg/db"
+	dbpkg "user-service/pkg/db"
 	"user-service/pkg/handlers"
 	"user-service/pkg/jwt"
 	"user-service/pkg/repository"
@@ -19,7 +23,25 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/pressly/goose/v3"
 )
+
+//go:embed pkg/db/migrations/*.sql
+var migrationsFS embed.FS
+
+// migrateUp applies all up migrations using goose with embedded FS.
+// Set env MIGRATE_ON_START=true (default) to run on startup.
+func migrateUp(sqlDB *sql.DB) error {
+	goose.SetBaseFS(migrationsFS)
+	if err := goose.SetDialect("postgres"); err != nil {
+		return fmt.Errorf("goose set dialect: %w", err)
+	}
+	// directory path is relative to the root of the embedded FS
+	if err := goose.Up(sqlDB, "pkg/db/migrations"); err != nil {
+		return fmt.Errorf("goose up: %w", err)
+	}
+	return nil
+}
 
 // @title User API
 // @description This is a sample server for a user API.
@@ -34,7 +56,8 @@ import (
 func main() {
 	os.Setenv("TZ", "Asia/Bangkok")
 	config.LoadConfig()
-	db := db.Open(db.Config{
+
+	gormDB := dbpkg.Open(dbpkg.Config{
 		Host:     config.Get("DB_HOST", "localhost"),
 		Port:     config.GetInt("DB_PORT", 5432),
 		User:     config.Get("DB_USER", "user"),
@@ -42,14 +65,28 @@ func main() {
 		Dbname:   config.Get("DB_NAME", "userdb"),
 		Sslmode:  config.Get("DB_SSLMODE", "disable"),
 	})
-	cmd.InitCmd()
-	userRepository := repository.NewUserRepository(db)
+
+	sqlDB, err := gormDB.DB()
+	if err != nil {
+		log.Fatalf("cannot get *sql.DB from gorm: %v", err)
+	}
+	// cmd.InitCmd()
+
+	// Run migrations on start if enabled
+	if config.Get("MIGRATE_ON_START", "true") == "true" {
+		if err := migrateUp(sqlDB); err != nil {
+			log.Fatalf("migration failed: %v", err)
+		}
+	}
+
+	userRepository := repository.NewUserRepository(gormDB)
 	jwtService := jwt.NewJwtService(
 		config.Get("JWT_SECRET", "secret"),
 		config.GetInt("JWT_TTL", 3600),
 	)
-	userService := service.NewUserService(db, userRepository, jwtService)
+	userService := service.NewUserService(gormDB, userRepository, jwtService)
 	userHandler := handlers.NewUserHandler(userService)
+	validate := validator.New()
 
 	app := fiber.New(fiber.Config{
 		JSONDecoder: func(b []byte, v any) error {
@@ -66,7 +103,7 @@ func main() {
 			for rv.Kind() == reflect.Pointer {
 				rv = rv.Elem()
 			}
-			validate := validator.New()
+
 			if rv.Kind() == reflect.Struct {
 				if err := validate.Struct(v); err != nil {
 					return err
@@ -77,13 +114,17 @@ func main() {
 	})
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000",
-		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+		AllowOrigins:     "http://localhost:3000",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowCredentials: true,
 	}))
 
 	routes.SetupRoutes(app, userHandler, jwtService)
+
 	port := config.Get("APP_PORT", "8000")
 	fmt.Println("Server is running on port " + port)
-	app.Listen("localhost:" + port)
+	// listen on all interfaces for containerized envs; change back to "localhost:"+port if desired
+	if err := app.Listen(":" + port); err != nil {
+		log.Fatal(err)
+	}
 }

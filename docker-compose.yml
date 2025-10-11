@@ -1,13 +1,35 @@
 version: '3.8'
-
 services:
   postgres:
-    image: postgres:latest
+    image: postgres:17
     environment:
-      POSTGRES_DB: mydatabase
+      POSTGRES_DB: sa_user
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
     ports:
       - "5432:5432"
-    volumes:
-      - ./db/init-multiple-db.sql:/docker-entrypoint-initdb.d/init-multiple-db.sql
+    # volumes:
+    #   - pgdata:/var/lib/postgresql/data
+      # - ./db/init-multiple-db.sql:/docker-entrypoint-initdb.d/init-multiple-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d sa_user"]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+
+  sa_user:
+    image: sa_user:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  default:
+    driver: bridge
+volumes:
+  pgdata:
