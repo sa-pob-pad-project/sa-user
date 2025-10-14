@@ -99,7 +99,7 @@ func (h *UserHandler) Profile(ctx *fiber.Ctx) error {
 	return response.OK(ctx, user)
 }
 
-func (h *UserHandler) UpdateProfile(ctx *fiber.Ctx) error {
+func (h *UserHandler) UpdatePatientProfile(ctx *fiber.Ctx) error {
 	userID := ctx.Locals("userID").(string)
 	fmt.Println("UpdateProfile endpoint hit, userID:", userID)
 

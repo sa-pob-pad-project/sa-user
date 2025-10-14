@@ -24,4 +24,5 @@ func SetupRoutes(app *fiber.App, userHandler *handlers.UserHandler, jwtSvc *jwt.
 	v1.Post("/patient/login", userHandler.PatientLogin)
 	v1.Use(middleware.JwtMiddleware(jwtSvc))
 	v1.Get("/patient/me", userHandler.Profile)
+	v1.Patch("/patient", userHandler.UpdatePatientProfile)
 }
