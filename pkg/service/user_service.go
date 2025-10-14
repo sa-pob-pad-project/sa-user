@@ -103,6 +103,7 @@ func (s *UserService) GetProfileByID(ctx context.Context, userID string) (*dto.G
 		return nil, err
 	}
 	res := &dto.GetProfileResponseDto{
+		ID:               user.ID.String(),
 		FirstName:        user.FirstName,
 		LastName:         user.LastName,
 		Gender:           user.Gender,
@@ -114,6 +115,53 @@ func (s *UserService) GetProfileByID(ctx context.Context, userID string) (*dto.G
 		Allergies:        user.Patient.Allergies,
 		EmergencyContact: user.Patient.EmergencyContact,
 		BloodType:        user.Patient.BloodType,
+	}
+	return res, nil
+}
+
+func (s *UserService) GetPatientByID(ctx context.Context, patientID string) (*dto.GetProfileResponseDto, error) {
+	user, err := s.userRepository.FindPatientByID(ctx, patientID)
+	if err != nil {
+		return nil, apperr.New(apperr.CodeNotFound, "patient not found", err)
+	}
+	if user.Patient == nil {
+		return nil, apperr.New(apperr.CodeNotFound, "patient data not found", nil)
+	}
+	res := &dto.GetProfileResponseDto{
+		ID:               user.ID.String(),
+		FirstName:        user.FirstName,
+		LastName:         user.LastName,
+		Gender:           user.Gender,
+		PhoneNumber:      user.PhoneNumber,
+		HospitalID:       user.Patient.HospitalID,
+		BirthDate:        user.Patient.BirthDate,
+		IDCardNumber:     user.Patient.IDCardNumber,
+		Address:          user.Patient.Address,
+		Allergies:        user.Patient.Allergies,
+		EmergencyContact: user.Patient.EmergencyContact,
+		BloodType:        user.Patient.BloodType,
+	}
+	return res, nil
+}
+
+func (s *UserService) GetDoctorByID(ctx context.Context, doctorID string) (*dto.GetDoctorProfileResponseDto, error) {
+	user, err := s.userRepository.FindDoctorByID(ctx, doctorID)
+	if err != nil {
+		return nil, apperr.New(apperr.CodeNotFound, "doctor not found", err)
+	}
+	if user.Doctor == nil {
+		return nil, apperr.New(apperr.CodeNotFound, "doctor data not found", nil)
+	}
+	res := &dto.GetDoctorProfileResponseDto{
+		ID:              user.ID.String(),
+		FirstName:       user.FirstName,
+		LastName:        user.LastName,
+		Gender:          user.Gender,
+		PhoneNumber:     user.PhoneNumber,
+		Username:        user.Doctor.Username,
+		Specialty:       user.Doctor.Specialty,
+		Bio:             user.Doctor.Bio,
+		YearsExperience: user.Doctor.YearsExperience,
 	}
 	return res, nil
 }

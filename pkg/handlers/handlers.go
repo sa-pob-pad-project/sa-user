@@ -128,6 +128,50 @@ func (h *UserHandler) UpdatePatientProfile(ctx *fiber.Ctx) error {
 	return response.OK(ctx, res)
 }
 
+// GetPatientByID godoc
+// @Summary Get patient by ID
+// @Description Get patient profile information by patient ID
+// @Tags patients
+// @Accept  json
+// @Produce  json
+// @Param id path string true "Patient ID"
+// @Success 200 {object} dto.GetProfileResponseDto "Patient profile retrieved successfully"
+// @Failure 404 {object} response.ErrorResponse "Patient not found"
+// @Failure 500 {object} response.ErrorResponse "Failed to get patient profile"
+// @Router /api/user/v1/patient/{id} [get]
+func (h *UserHandler) GetPatientByID(ctx *fiber.Ctx) error {
+	patientID := ctx.Params("id")
+	fmt.Println("GetPatientByID endpoint hit, patientID:", patientID)
+
+	patient, err := h.userService.GetPatientByID(ctx.Context(), patientID)
+	if err != nil {
+		return writeError(ctx, err)
+	}
+	return response.OK(ctx, patient)
+}
+
+// GetDoctorByID godoc
+// @Summary Get doctor by ID
+// @Description Get doctor profile information by doctor ID
+// @Tags doctors
+// @Accept  json
+// @Produce  json
+// @Param id path string true "Doctor ID"
+// @Success 200 {object} dto.GetDoctorProfileResponseDto "Doctor profile retrieved successfully"
+// @Failure 404 {object} response.ErrorResponse "Doctor not found"
+// @Failure 500 {object} response.ErrorResponse "Failed to get doctor profile"
+// @Router /api/user/v1/doctor/{id} [get]
+func (h *UserHandler) GetDoctorByID(ctx *fiber.Ctx) error {
+	doctorID := ctx.Params("id")
+	fmt.Println("GetDoctorByID endpoint hit, doctorID:", doctorID)
+
+	doctor, err := h.userService.GetDoctorByID(ctx.Context(), doctorID)
+	if err != nil {
+		return writeError(ctx, err)
+	}
+	return response.OK(ctx, doctor)
+}
+
 func writeError(c *fiber.Ctx, err error) error {
 	var ae *apperr.Error
 	status := fiber.StatusInternalServerError

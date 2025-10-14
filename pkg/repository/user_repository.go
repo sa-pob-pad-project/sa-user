@@ -62,6 +62,16 @@ func (r *UserRepository) FindPatientByID(ctx context.Context, id string) (*model
 
 }
 
+func (r *UserRepository) FindDoctorByID(ctx context.Context, id string) (*models.User, error) {
+	var user models.User
+	if err := r.db.WithContext(ctx).Preload("Doctor").Where("id = ?", id).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, err
+		}
+	}
+	return &user, nil
+}
+
 func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
 	if err := r.db.WithContext(ctx).Where("email = ?", email).First(&user).Error; err != nil {
