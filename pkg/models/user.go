@@ -15,7 +15,6 @@ const (
 	AdminRole   Role = "admin"
 )
 
-
 const (
 	Male   string = "male"
 	Female string = "female"

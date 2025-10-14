@@ -17,18 +17,22 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	}
 }
 
-func (r *UserRepository) Transaction(ctx context.Context, fn func(repo *UserRepository) error) error {
+func (r *UserRepository) Transaction(ctx context.Context, fn func(repo *UserRepository) (interface{}, error)) (interface{}, error) {
 	tx := r.db.Begin()
 	if tx.Error != nil {
-		return tx.Error
+		return nil, tx.Error
 	}
 	repoWithTx := r.withTx(tx)
 
-	if err := fn(repoWithTx); err != nil {
+	result, err := fn(repoWithTx)
+	if err != nil {
 		tx.Rollback()
-		return err
+		return nil, err
 	}
-	return tx.Commit().Error
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func (r *UserRepository) withTx(tx *gorm.DB) *UserRepository {
@@ -83,3 +87,17 @@ func (r *UserRepository) CreatePatient(ctx context.Context, patient *models.Pati
 	return nil
 }
 
+func (r *UserRepository) UpdateUser(ctx context.Context, user *models.User) error {
+	if err := r.db.WithContext(ctx).Save(user).Error; err != nil {
+
+		return err
+	}
+	return nil
+}
+
+func (r *UserRepository) UpdatePatient(ctx context.Context, patient *models.Patient) error {
+	if err := r.db.WithContext(ctx).Save(patient).Error; err != nil {
+		return err
+	}
+	return nil
+}

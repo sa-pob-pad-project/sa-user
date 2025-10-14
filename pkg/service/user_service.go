@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"user-service/pkg/apperr"
 	"user-service/pkg/constants"
 	"user-service/pkg/dto"
 	"user-service/pkg/jwt"
@@ -15,16 +16,16 @@ import (
 )
 
 type UserService struct {
-	db                *gorm.DB
-	userRepository    *repository.UserRepository
-	jwtService        *jwt.JwtService
+	db             *gorm.DB
+	userRepository *repository.UserRepository
+	jwtService     *jwt.JwtService
 }
 
 func NewUserService(db *gorm.DB, userRepo *repository.UserRepository, jwtService *jwt.JwtService) *UserService {
 	return &UserService{
-		db:                db,
-		userRepository:    userRepo,
-		jwtService:        jwtService,
+		db:             db,
+		userRepository: userRepo,
+		jwtService:     jwtService,
 	}
 }
 
@@ -50,22 +51,22 @@ func (s *UserService) Register(ctx context.Context, body *dto.PatientRegisterPat
 
 	hashedPassword, err := utils.HashPassword(body.Password)
 	if err != nil {
-		return &dto.PatientRegisterResponseDto{}, err
+		return &dto.PatientRegisterResponseDto{}, apperr.New(apperr.CodeInternal, "hash password failed", err)
 	}
 	user.Password = hashedPassword
 
-	err = s.userRepository.Transaction(ctx, func(repo *repository.UserRepository) error {
+	_, err = s.userRepository.Transaction(ctx, func(repo *repository.UserRepository) (interface{}, error) {
 		if err := repo.CreateUser(ctx, user); err != nil {
-			return err
+			return nil, apperr.New(apperr.CodeInternal, "create user failed", err)
 		}
 		if err := repo.CreatePatient(ctx, patient); err != nil {
-			return err
+			return nil, apperr.New(apperr.CodeInternal, "create patient failed", err)
 		}
-		return nil
+		return nil, nil
 	})
-	
+
 	if err != nil {
-		return &dto.PatientRegisterResponseDto{}, err
+		return &dto.PatientRegisterResponseDto{}, apperr.New(apperr.CodeInternal, "transaction failed", err)
 	}
 
 	return &dto.PatientRegisterResponseDto{Message: "User registered successfully"}, nil
@@ -114,8 +115,61 @@ func (s *UserService) GetProfileByID(ctx context.Context, userID string) (*dto.G
 		EmergencyContact: user.Patient.EmergencyContact,
 		BloodType:        user.Patient.BloodType,
 	}
-	if err != nil {
-		return nil, err
-	}
 	return res, nil
+}
+
+func (s *UserService) UpdateProfileByID(ctx context.Context, userID string, body *dto.UpdatePatientProfileRequestDto) (*dto.UpdatePatientProfileResponseDto, error) {
+	result, err := s.userRepository.Transaction(ctx, func(repo *repository.UserRepository) (interface{}, error) {
+		user, err := repo.FindPatientByID(ctx, userID)
+		if err != nil {
+			return nil, apperr.New(apperr.CodeBadRequest, "user not found", nil)
+		}
+
+		// Update user fields if provided
+		if body.FirstName != nil {
+			user.FirstName = *body.FirstName
+		}
+		if body.LastName != nil {
+			user.LastName = *body.LastName
+		}
+		if body.PhoneNumber != nil {
+			user.PhoneNumber = *body.PhoneNumber
+		}
+
+		// Update patient fields if provided
+		if body.BirthDate != nil {
+			user.Patient.BirthDate = body.BirthDate
+		}
+		if body.IDCardNumber != nil {
+			user.Patient.IDCardNumber = body.IDCardNumber
+		}
+		if body.Address != nil {
+			user.Patient.Address = body.Address
+		}
+		if body.Allergies != nil {
+			user.Patient.Allergies = body.Allergies
+		}
+		if body.EmergencyContact != nil {
+			user.Patient.EmergencyContact = body.EmergencyContact
+		}
+		if body.BloodType != nil {
+			user.Patient.BloodType = body.BloodType
+		}
+
+		// Save user and patient
+		if err := repo.UpdateUser(ctx, user); err != nil {
+			return nil, apperr.New(apperr.CodeInternal, "update user failed", err)
+		}
+		if err := repo.UpdatePatient(ctx, user.Patient); err != nil {
+			return nil, apperr.New(apperr.CodeInternal, "update patient failed", err)
+		}
+
+		return &dto.UpdatePatientProfileResponseDto{Message: "Profile updated successfully"}, nil
+	})
+
+	if err != nil {
+		return nil, apperr.New(apperr.CodeInternal, "transaction failed", err)
+	}
+
+	return result.(*dto.UpdatePatientProfileResponseDto), nil
 }

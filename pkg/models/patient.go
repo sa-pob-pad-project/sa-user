@@ -9,7 +9,7 @@ import (
 
 type Patient struct {
 	UserID           uuid.UUID      `json:"user_id" gorm:"primaryKey;type:uuid"`
-	HospitalID       string        `json:"hospital_id" gorm:"unique,not null"`
+	HospitalID       string         `json:"hospital_id" gorm:"unique,not null"`
 	BirthDate        *time.Time     `json:"birth_date,omitempty"`
 	IDCardNumber     *string        `json:"id_card_number,omitempty" gorm:"size:13"`
 	Address          *string        `json:"address,omitempty"`
@@ -23,4 +23,3 @@ type Patient struct {
 	User                   User                    `json:"user" gorm:"foreignKey:UserID;references:ID"`
 	HealthcareEntitlements []HealthcareEntitlement `json:"healthcare_entitlements,omitempty" gorm:"many2many:user_healthcare_entitlement;foreignKey:UserID;joinForeignKey:PatientID;References:Name;joinReferences:HealthcareEntitlement"`
 }
-

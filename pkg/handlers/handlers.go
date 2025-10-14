@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
+	"user-service/pkg/apperr"
 	"user-service/pkg/dto"
 	response "user-service/pkg/response"
 	"user-service/pkg/service"
@@ -40,7 +42,7 @@ func (h *UserHandler) PatientRegister(ctx *fiber.Ctx) error {
 	res, err := h.userService.Register(ctx.Context(), &body)
 
 	if err != nil {
-		return response.InternalServerError(ctx, "Failed to register user: "+err.Error())
+		return writeError(ctx, err)
 	}
 
 	return response.Created(ctx, res)
@@ -64,12 +66,12 @@ func (h *UserHandler) PatientLogin(ctx *fiber.Ctx) error {
 	}
 	res, err := h.userService.PatientLogin(ctx.Context(), &body)
 	if err != nil {
-		return response.Unauthorized(ctx, err.Error())
+		return writeError(ctx, err)
 	}
 	// set token in cookie
 	ctx.Cookie(&fiber.Cookie{
-		Name:  "access_token",
-		Value: res.AccessToken,
+		Name:     "access_token",
+		Value:    res.AccessToken,
 		HTTPOnly: true,
 		SameSite: "None",
 	})
@@ -92,7 +94,50 @@ func (h *UserHandler) Profile(ctx *fiber.Ctx) error {
 	fmt.Println("Profile endpoint hit, userID:", userID)
 	user, err := h.userService.GetProfileByID(ctx.Context(), userID)
 	if err != nil {
-		return response.InternalServerError(ctx, "Failed to get user profile: "+err.Error())
+		return writeError(ctx, err)
 	}
 	return response.OK(ctx, user)
+}
+
+func (h *UserHandler) UpdateProfile(ctx *fiber.Ctx) error {
+	userID := ctx.Locals("userID").(string)
+	fmt.Println("UpdateProfile endpoint hit, userID:", userID)
+
+	var body dto.UpdatePatientProfileRequestDto
+	if err := ctx.BodyParser(&body); err != nil {
+		return response.BadRequest(ctx, "Invalid request body "+err.Error())
+	}
+
+	res, err := h.userService.UpdateProfileByID(ctx.Context(), userID, &body)
+	if err != nil {
+		return writeError(ctx, err)
+	}
+	return response.OK(ctx, res)
+}
+
+
+
+func writeError(c *fiber.Ctx, err error) error {
+	var ae *apperr.Error
+	status := fiber.StatusInternalServerError
+	msg := "internal error"
+
+	if errors.As(err, &ae) {
+		msg = ae.Msg
+		switch ae.Code {
+		case apperr.CodeBadRequest:
+			status = fiber.StatusBadRequest
+		case apperr.CodeUnauthorized:
+			status = fiber.StatusUnauthorized
+		case apperr.CodeForbidden:
+			status = fiber.StatusForbidden
+		case apperr.CodeNotFound:
+			status = fiber.StatusNotFound
+		case apperr.CodeConflict:
+			status = fiber.StatusConflict
+		default:
+			status = fiber.StatusInternalServerError
+		}
+	}
+	return c.Status(status).JSON(fiber.Map{"error": msg})
 }
