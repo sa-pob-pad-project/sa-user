@@ -99,6 +99,19 @@ func (h *UserHandler) Profile(ctx *fiber.Ctx) error {
 	return response.OK(ctx, user)
 }
 
+// UpdatePatientProfile godoc
+// @Summary Update patient profile
+// @Description Update the profile information of the authenticated patient
+// @Tags patients
+// @Accept  json
+// @Produce  json
+// @Security ApiKeyAuth
+// @Param patient body dto.UpdatePatientProfileRequestDto true "Patient profile update data"
+// @Success 200 {object} dto.UpdatePatientProfileResponseDto "Profile updated successfully"
+// @Failure 400 {object} response.ErrorResponse "Invalid request body or user not found"
+// @Failure 401 {object} response.ErrorResponse "Unauthorized - Invalid or missing token"
+// @Failure 500 {object} response.ErrorResponse "Failed to update user profile"
+// @Router /api/user/v1/patient/me [put]
 func (h *UserHandler) UpdatePatientProfile(ctx *fiber.Ctx) error {
 	userID := ctx.Locals("userID").(string)
 	fmt.Println("UpdateProfile endpoint hit, userID:", userID)
@@ -114,8 +127,6 @@ func (h *UserHandler) UpdatePatientProfile(ctx *fiber.Ctx) error {
 	}
 	return response.OK(ctx, res)
 }
-
-
 
 func writeError(c *fiber.Ctx, err error) error {
 	var ae *apperr.Error
