@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-  postgres:
+  sa_user_postgres:
     image: postgres:17
     environment:
       POSTGRES_DB: sa_user
@@ -24,10 +24,10 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      postgres:
+      sa_user_postgres:
         condition: service_healthy
     environment:
-      - DB_HOST=postgres
+      - DB_HOST=sa_user_postgres
       - DB_PORT=5432
 
 networks:

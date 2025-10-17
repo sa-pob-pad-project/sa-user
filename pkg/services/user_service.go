@@ -253,6 +253,9 @@ func (s *UserService) UpdateProfileByID(ctx context.Context, body *dto.UpdatePat
 }
 
 func (s *UserService) GetDoctorsByIDs(ctx context.Context, doctorIDs []string) ([]*dto.GetDoctorProfileResponseDto, error) {
+	if len(doctorIDs) == 0 {
+		return []*dto.GetDoctorProfileResponseDto{}, nil
+	}
 	doctors, err := s.userRepository.FindManyDoctorsByIDs(ctx, doctorIDs)
 	if err != nil {
 		return nil, apperr.New(apperr.CodeInternal, "failed to find doctors", err)
@@ -279,6 +282,9 @@ func (s *UserService) GetDoctorsByIDs(ctx context.Context, doctorIDs []string) (
 }
 
 func (s *UserService) GetPatientsByIDs(ctx context.Context, patientIDs []string) ([]*dto.GetProfileResponseDto, error) {
+	if len(patientIDs) == 0 {
+		return []*dto.GetProfileResponseDto{}, nil
+	}
 	patients, err := s.userRepository.FindManyPatientsByIDs(ctx, patientIDs)
 	if err != nil {
 		return nil, apperr.New(apperr.CodeInternal, "failed to find patients", err)
