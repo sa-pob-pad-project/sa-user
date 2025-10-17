@@ -2,10 +2,11 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"user-service/pkg/apperr"
+	"user-service/pkg/clients"
 	"user-service/pkg/constants"
+	contextUtils "user-service/pkg/context"
 	"user-service/pkg/dto"
 	"user-service/pkg/jwt"
 	"user-service/pkg/models"
@@ -18,13 +19,15 @@ import (
 type UserService struct {
 	db             *gorm.DB
 	userRepository *repository.UserRepository
+	userClient     *clients.UserClient
 	jwtService     *jwt.JwtService
 }
 
-func NewUserService(db *gorm.DB, userRepo *repository.UserRepository, jwtService *jwt.JwtService) *UserService {
+func NewUserService(db *gorm.DB, userRepo *repository.UserRepository, userClient *clients.UserClient, jwtService *jwt.JwtService) *UserService {
 	return &UserService{
 		db:             db,
 		userRepository: userRepo,
+		userClient:     userClient,
 		jwtService:     jwtService,
 	}
 }
@@ -73,34 +76,33 @@ func (s *UserService) Register(ctx context.Context, body *dto.PatientRegisterPat
 }
 
 func (s *UserService) PatientLogin(ctx context.Context, body *dto.PatientLoginRequestDto) (*dto.PatientLoginResponseDto, error) {
-
 	user, err := s.userRepository.FindByHospitalID(ctx, body.HospitalID)
 	if err != nil {
-		return nil, err
+		return nil, apperr.New(apperr.CodeInternal, "failed to find user", err)
 	}
 	if user == nil {
-		return nil, errors.New("user not found")
+		return nil, apperr.New(apperr.CodeUnauthorized, "invalid credentials", nil)
 	}
 	ok, err := utils.VerifyPassword(body.Password, user.Password)
 	if !ok || err != nil {
 		fmt.Println(ok, err)
-		return nil, errors.New("invalid credentials")
+		return nil, apperr.New(apperr.CodeUnauthorized, "invalid credentials", err)
 	}
 	// sign token
 	token, err := s.jwtService.GenerateToken(user.ID.String(), constants.RolePatient)
 	if err != nil {
-		return nil, err
+		return nil, apperr.New(apperr.CodeInternal, "failed to generate token", err)
 	}
-	// set token in cookie
 	return &dto.PatientLoginResponseDto{
 		AccessToken: token,
 	}, nil
 }
 
-func (s *UserService) GetProfileByID(ctx context.Context, userID string) (*dto.GetProfileResponseDto, error) {
+func (s *UserService) GetProfileByID(ctx context.Context) (*dto.GetProfileResponseDto, error) {
+	userID := contextUtils.GetUserId(ctx)
 	user, err := s.userRepository.FindPatientByID(ctx, userID)
 	if err != nil {
-		return nil, err
+		return nil, apperr.New(apperr.CodeNotFound, "patient profile not found", err)
 	}
 	res := &dto.GetProfileResponseDto{
 		ID:               user.ID.String(),
@@ -166,11 +168,12 @@ func (s *UserService) GetDoctorByID(ctx context.Context, doctorID string) (*dto.
 	return res, nil
 }
 
-func (s *UserService) UpdateProfileByID(ctx context.Context, userID string, body *dto.UpdatePatientProfileRequestDto) (*dto.UpdatePatientProfileResponseDto, error) {
+func (s *UserService) UpdateProfileByID(ctx context.Context, body *dto.UpdatePatientProfileRequestDto) (*dto.UpdatePatientProfileResponseDto, error) {
+	userID := contextUtils.GetUserId(ctx)
 	result, err := s.userRepository.Transaction(ctx, func(repo *repository.UserRepository) (interface{}, error) {
 		user, err := repo.FindPatientByID(ctx, userID)
 		if err != nil {
-			return nil, apperr.New(apperr.CodeBadRequest, "user not found", nil)
+			return nil, apperr.New(apperr.CodeNotFound, "user not found", err)
 		}
 
 		// Update user fields if provided

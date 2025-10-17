@@ -1,6 +1,10 @@
 package apperr
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/gofiber/fiber/v2"
+)
 
 type Code int
 
@@ -38,4 +42,29 @@ func IsCode(err error, code Code) bool {
 		return ae.Code == code
 	}
 	return false
+}
+
+func WriteError(c *fiber.Ctx, err error) error {
+	var ae *Error
+	status := fiber.StatusInternalServerError
+	msg := "internal error"
+
+	if errors.As(err, &ae) {
+		msg = ae.Msg
+		switch ae.Code {
+		case CodeBadRequest:
+			status = fiber.StatusBadRequest
+		case CodeUnauthorized:
+			status = fiber.StatusUnauthorized
+		case CodeForbidden:
+			status = fiber.StatusForbidden
+		case CodeNotFound:
+			status = fiber.StatusNotFound
+		case CodeConflict:
+			status = fiber.StatusConflict
+		default:
+			status = fiber.StatusInternalServerError
+		}
+	}
+	return c.Status(status).JSON(fiber.Map{"error": msg})
 }

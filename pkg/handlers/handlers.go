@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
 	"user-service/pkg/apperr"
+	contextUtils "user-service/pkg/context"
 	"user-service/pkg/dto"
 	response "user-service/pkg/response"
-	"user-service/pkg/service"
+	service "user-service/pkg/services"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -32,20 +32,20 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 // @Failure 400 {object} response.ErrorResponse "Invalid request body"
 // @Failure 500 {object} response.ErrorResponse "Failed to register user"
 // @Router /api/user/v1/patient/register [post]
-func (h *UserHandler) PatientRegister(ctx *fiber.Ctx) error {
+func (h *UserHandler) PatientRegister(c *fiber.Ctx) error {
 	fmt.Println("Register endpoint hit")
 	var body dto.PatientRegisterPatientRequestDto
-	if err := ctx.BodyParser(&body); err != nil {
-		return response.BadRequest(ctx, "Invalid request body "+err.Error())
+	if err := c.BodyParser(&body); err != nil {
+		return response.BadRequest(c, "Invalid request body "+err.Error())
 	}
 
-	res, err := h.userService.Register(ctx.Context(), &body)
-
+	ctx := contextUtils.GetContext(c)
+	res, err := h.userService.Register(ctx, &body)
 	if err != nil {
-		return writeError(ctx, err)
+		return apperr.WriteError(c, err)
 	}
 
-	return response.Created(ctx, res)
+	return response.Created(c, res)
 }
 
 // PatientLogin godoc
@@ -59,23 +59,26 @@ func (h *UserHandler) PatientRegister(ctx *fiber.Ctx) error {
 // @Failure 400 {object} response.ErrorResponse "Invalid request body"
 // @Failure 401 {object} response.ErrorResponse "Invalid credentials"
 // @Router /api/user/v1/patient/login [post]
-func (h *UserHandler) PatientLogin(ctx *fiber.Ctx) error {
+func (h *UserHandler) PatientLogin(c *fiber.Ctx) error {
 	var body dto.PatientLoginRequestDto
-	if err := ctx.BodyParser(&body); err != nil {
-		return response.BadRequest(ctx, "Invalid request body "+err.Error())
+	if err := c.BodyParser(&body); err != nil {
+		return response.BadRequest(c, "Invalid request body "+err.Error())
 	}
-	res, err := h.userService.PatientLogin(ctx.Context(), &body)
+
+	ctx := contextUtils.GetContext(c)
+	res, err := h.userService.PatientLogin(ctx, &body)
 	if err != nil {
-		return writeError(ctx, err)
+		return apperr.WriteError(c, err)
 	}
+
 	// set token in cookie
-	ctx.Cookie(&fiber.Cookie{
+	c.Cookie(&fiber.Cookie{
 		Name:     "access_token",
 		Value:    res.AccessToken,
 		HTTPOnly: true,
 		SameSite: "None",
 	})
-	return response.OK(ctx, res)
+	return response.OK(c, res)
 }
 
 // Profile godoc
@@ -89,14 +92,13 @@ func (h *UserHandler) PatientLogin(ctx *fiber.Ctx) error {
 // @Failure 401 {object} response.ErrorResponse "Unauthorized - Invalid or missing token"
 // @Failure 500 {object} response.ErrorResponse "Failed to get user profile"
 // @Router /api/user/v1/patient/me [get]
-func (h *UserHandler) Profile(ctx *fiber.Ctx) error {
-	userID := ctx.Locals("userID").(string)
-	fmt.Println("Profile endpoint hit, userID:", userID)
-	user, err := h.userService.GetProfileByID(ctx.Context(), userID)
+func (h *UserHandler) Profile(c *fiber.Ctx) error {
+	ctx := contextUtils.GetContext(c)
+	user, err := h.userService.GetProfileByID(ctx)
 	if err != nil {
-		return writeError(ctx, err)
+		return apperr.WriteError(c, err)
 	}
-	return response.OK(ctx, user)
+	return response.OK(c, user)
 }
 
 // UpdatePatientProfile godoc
@@ -112,20 +114,18 @@ func (h *UserHandler) Profile(ctx *fiber.Ctx) error {
 // @Failure 401 {object} response.ErrorResponse "Unauthorized - Invalid or missing token"
 // @Failure 500 {object} response.ErrorResponse "Failed to update user profile"
 // @Router /api/user/v1/patient/me [put]
-func (h *UserHandler) UpdatePatientProfile(ctx *fiber.Ctx) error {
-	userID := ctx.Locals("userID").(string)
-	fmt.Println("UpdateProfile endpoint hit, userID:", userID)
-
+func (h *UserHandler) UpdatePatientProfile(c *fiber.Ctx) error {
 	var body dto.UpdatePatientProfileRequestDto
-	if err := ctx.BodyParser(&body); err != nil {
-		return response.BadRequest(ctx, "Invalid request body "+err.Error())
+	if err := c.BodyParser(&body); err != nil {
+		return response.BadRequest(c, "Invalid request body "+err.Error())
 	}
 
-	res, err := h.userService.UpdateProfileByID(ctx.Context(), userID, &body)
+	ctx := contextUtils.GetContext(c)
+	res, err := h.userService.UpdateProfileByID(ctx, &body)
 	if err != nil {
-		return writeError(ctx, err)
+		return apperr.WriteError(c, err)
 	}
-	return response.OK(ctx, res)
+	return response.OK(c, res)
 }
 
 // GetPatientByID godoc
@@ -139,15 +139,16 @@ func (h *UserHandler) UpdatePatientProfile(ctx *fiber.Ctx) error {
 // @Failure 404 {object} response.ErrorResponse "Patient not found"
 // @Failure 500 {object} response.ErrorResponse "Failed to get patient profile"
 // @Router /api/user/v1/patient/{id} [get]
-func (h *UserHandler) GetPatientByID(ctx *fiber.Ctx) error {
-	patientID := ctx.Params("id")
+func (h *UserHandler) GetPatientByID(c *fiber.Ctx) error {
+	patientID := c.Params("id")
 	fmt.Println("GetPatientByID endpoint hit, patientID:", patientID)
 
-	patient, err := h.userService.GetPatientByID(ctx.Context(), patientID)
+	ctx := contextUtils.GetContext(c)
+	patient, err := h.userService.GetPatientByID(ctx, patientID)
 	if err != nil {
-		return writeError(ctx, err)
+		return apperr.WriteError(c, err)
 	}
-	return response.OK(ctx, patient)
+	return response.OK(c, patient)
 }
 
 // GetDoctorByID godoc
@@ -161,38 +162,14 @@ func (h *UserHandler) GetPatientByID(ctx *fiber.Ctx) error {
 // @Failure 404 {object} response.ErrorResponse "Doctor not found"
 // @Failure 500 {object} response.ErrorResponse "Failed to get doctor profile"
 // @Router /api/user/v1/doctor/{id} [get]
-func (h *UserHandler) GetDoctorByID(ctx *fiber.Ctx) error {
-	doctorID := ctx.Params("id")
+func (h *UserHandler) GetDoctorByID(c *fiber.Ctx) error {
+	doctorID := c.Params("id")
 	fmt.Println("GetDoctorByID endpoint hit, doctorID:", doctorID)
 
-	doctor, err := h.userService.GetDoctorByID(ctx.Context(), doctorID)
+	ctx := contextUtils.GetContext(c)
+	doctor, err := h.userService.GetDoctorByID(ctx, doctorID)
 	if err != nil {
-		return writeError(ctx, err)
+		return apperr.WriteError(c, err)
 	}
-	return response.OK(ctx, doctor)
-}
-
-func writeError(c *fiber.Ctx, err error) error {
-	var ae *apperr.Error
-	status := fiber.StatusInternalServerError
-	msg := "internal error"
-
-	if errors.As(err, &ae) {
-		msg = ae.Msg
-		switch ae.Code {
-		case apperr.CodeBadRequest:
-			status = fiber.StatusBadRequest
-		case apperr.CodeUnauthorized:
-			status = fiber.StatusUnauthorized
-		case apperr.CodeForbidden:
-			status = fiber.StatusForbidden
-		case apperr.CodeNotFound:
-			status = fiber.StatusNotFound
-		case apperr.CodeConflict:
-			status = fiber.StatusConflict
-		default:
-			status = fiber.StatusInternalServerError
-		}
-	}
-	return c.Status(status).JSON(fiber.Map{"error": msg})
+	return response.OK(c, doctor)
 }
