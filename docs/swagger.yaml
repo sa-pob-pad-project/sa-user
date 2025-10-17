@@ -239,35 +239,6 @@ paths:
       summary: Get doctors by IDs
       tags:
       - doctors
-  /api/user/v1/patient/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Get patient profile information by patient ID
-      parameters:
-      - description: Patient ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Patient profile retrieved successfully
-          schema:
-            $ref: '#/definitions/dto.GetProfileResponseDto'
-        "404":
-          description: Patient not found
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "500":
-          description: Failed to get patient profile
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-      summary: Get patient by ID
-      tags:
-      - patients
   /api/user/v1/patient/login:
     post:
       consumes:

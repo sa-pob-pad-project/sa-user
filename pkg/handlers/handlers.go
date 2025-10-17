@@ -163,29 +163,6 @@ func (h *UserHandler) UpdatePatientProfile(c *fiber.Ctx) error {
 	return response.OK(c, res)
 }
 
-// GetPatientByID godoc
-// @Summary Get patient by ID
-// @Description Get patient profile information by patient ID
-// @Tags patients
-// @Accept  json
-// @Produce  json
-// @Param id path string true "Patient ID"
-// @Success 200 {object} dto.GetProfileResponseDto "Patient profile retrieved successfully"
-// @Failure 404 {object} response.ErrorResponse "Patient not found"
-// @Failure 500 {object} response.ErrorResponse "Failed to get patient profile"
-// @Router /api/user/v1/patient/{id} [get]
-func (h *UserHandler) GetPatientByID(c *fiber.Ctx) error {
-	patientID := c.Params("id")
-	fmt.Println("GetPatientByID endpoint hit, patientID:", patientID)
-
-	ctx := contextUtils.GetContext(c)
-	patient, err := h.userService.GetPatientByID(ctx, patientID)
-	if err != nil {
-		return apperr.WriteError(c, err)
-	}
-	return response.OK(c, patient)
-}
-
 // GetDoctorByIDs godoc
 // @Summary Get doctors by IDs
 // @Description Get multiple doctor profiles by their IDs
