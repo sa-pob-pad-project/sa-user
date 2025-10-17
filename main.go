@@ -19,7 +19,7 @@ import (
 	"user-service/pkg/jwt"
 	"user-service/pkg/repository"
 	"user-service/pkg/routes"
-	"user-service/pkg/services"
+	service "user-service/pkg/services"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -83,11 +83,13 @@ func main() {
 	userServiceUrl := config.Get("USER_SERVICE_URL", "http://localhost:8000")
 	userClient := clients.New(userServiceUrl)
 	userRepository := repository.NewUserRepository(gormDB)
+	patientRepository := repository.NewPatientRepository(gormDB)
+	doctorRepository := repository.NewDoctorRepository(gormDB)
 	jwtService := jwt.NewJwtService(
 		config.Get("JWT_SECRET", "secret"),
 		config.GetInt("JWT_TTL", 3600),
 	)
-	userService := service.NewUserService(gormDB, userRepository, userClient, jwtService)
+	userService := service.NewUserService(gormDB, userRepository, patientRepository, doctorRepository, userClient, jwtService)
 	userHandler := handlers.NewUserHandler(userService)
 	validate := validator.New()
 
