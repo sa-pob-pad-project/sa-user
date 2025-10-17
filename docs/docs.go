@@ -15,6 +15,101 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/user/v1/doctor/login": {
+            "post": {
+                "description": "Authenticate a doctor and return access token with cookie",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "doctors"
+                ],
+                "summary": "Login a doctor",
+                "parameters": [
+                    {
+                        "description": "Doctor login credentials",
+                        "name": "doctor",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.DoctorLoginRequestDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Doctor logged in successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.DoctorLoginResponseDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/v1/doctors": {
+            "post": {
+                "description": "Get multiple doctor profiles by their IDs",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "doctors"
+                ],
+                "summary": "Get doctors by IDs",
+                "parameters": [
+                    {
+                        "description": "Doctor IDs",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.GetDoctorsByIDsRequestDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Doctor profiles retrieved successfully",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/user-service_pkg_dto.GetDoctorProfileResponseDto"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Doctors not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to get doctor profiles",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/user/v1/patient/login": {
             "post": {
                 "description": "Authenticate a patient and return access token",
@@ -99,6 +194,61 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update the profile information of the authenticated patient",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "patients"
+                ],
+                "summary": "Update patient profile",
+                "parameters": [
+                    {
+                        "description": "Patient profile update data",
+                        "name": "patient",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdatePatientProfileRequestDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdatePatientProfileResponseDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or user not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing token",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to update user profile",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/api/user/v1/patient/register": {
@@ -146,9 +296,154 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/user/v1/patient/{id}": {
+            "get": {
+                "description": "Get patient profile information by patient ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "patients"
+                ],
+                "summary": "Get patient by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Patient ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Patient profile retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.GetProfileResponseDto"
+                        }
+                    },
+                    "404": {
+                        "description": "Patient not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to get patient profile",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/v1/patients": {
+            "post": {
+                "description": "Get multiple patient profiles by their IDs",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "patients"
+                ],
+                "summary": "Get patients by IDs",
+                "parameters": [
+                    {
+                        "description": "Patient IDs",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.GetPatientsByIDsRequestDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Patient profiles retrieved successfully",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.GetProfileResponseDto"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Patients not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to get patient profiles",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "dto.DoctorLoginRequestDto": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.DoctorLoginResponseDto": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.GetDoctorsByIDsRequestDto": {
+            "type": "object",
+            "required": [
+                "doctor_ids"
+            ],
+            "properties": {
+                "doctor_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "dto.GetPatientsByIDsRequestDto": {
+            "type": "object",
+            "required": [
+                "patient_ids"
+            ],
+            "properties": {
+                "patient_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "dto.GetProfileResponseDto": {
             "type": "object",
             "properties": {
@@ -174,6 +469,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "hospital_id": {
+                    "type": "string"
+                },
+                "id": {
                     "type": "string"
                 },
                 "id_card_number": {
@@ -269,11 +567,84 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UpdatePatientProfileRequestDto": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "allergies": {
+                    "type": "string"
+                },
+                "birth_date": {
+                    "description": "Patient specific fields",
+                    "type": "string"
+                },
+                "blood_type": {
+                    "type": "string"
+                },
+                "emergency_contact": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "id_card_number": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdatePatientProfileResponseDto": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "response.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
                     "type": "string"
+                }
+            }
+        },
+        "user-service_pkg_dto.GetDoctorProfileResponseDto": {
+            "type": "object",
+            "properties": {
+                "bio": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "specialty": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "years_experience": {
+                    "type": "integer"
                 }
             }
         }

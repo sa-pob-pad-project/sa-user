@@ -81,7 +81,17 @@ func (h *UserHandler) PatientLogin(c *fiber.Ctx) error {
 	return response.OK(c, res)
 }
 
-
+// DoctorLogin godoc
+// @Summary Login a doctor
+// @Description Authenticate a doctor and return access token with cookie
+// @Tags doctors
+// @Accept  json
+// @Produce  json
+// @Param doctor body dto.DoctorLoginRequestDto true "Doctor login credentials"
+// @Success 200 {object} dto.DoctorLoginResponseDto "Doctor logged in successfully"
+// @Failure 400 {object} response.ErrorResponse "Invalid request body"
+// @Failure 401 {object} response.ErrorResponse "Invalid credentials"
+// @Router /api/user/v1/doctor/login [post]
 func (h *UserHandler) DoctorLogin(c *fiber.Ctx) error {
 	var body dto.DoctorLoginRequestDto
 	if err := c.BodyParser(&body); err != nil {
