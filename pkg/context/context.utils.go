@@ -2,7 +2,7 @@ package contextUtils
 
 import (
 	"context"
-	"time"
+	// "time"
 	"user-service/pkg/response"
 
 	"github.com/go-playground/validator/v10"
@@ -57,11 +57,6 @@ func GetContext(c *fiber.Ctx) context.Context {
 	token := c.Locals("accessToken")
 	if s, ok := token.(string); ok {
 		ctx = context.WithValue(ctx, ContextKeyAccessToken, s)
-	}
-	if _, ok := ctx.Deadline(); !ok {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, 2*time.Second)
-		defer cancel()
 	}
 
 	return ctx

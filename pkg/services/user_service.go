@@ -172,8 +172,11 @@ func (s *UserService) UpdateProfileByID(ctx context.Context, body *dto.UpdatePat
 	userID := contextUtils.GetUserId(ctx)
 	result, err := s.userRepository.Transaction(ctx, func(repo *repository.UserRepository) (interface{}, error) {
 		user, err := repo.FindPatientByID(ctx, userID)
-		if err != nil {
+		if err == gorm.ErrRecordNotFound {
 			return nil, apperr.New(apperr.CodeNotFound, "user not found", err)
+		}
+		if err != nil {
+			return nil, apperr.New(apperr.CodeInternal, "failed to find user", err)
 		}
 
 		// Update user fields if provided
@@ -223,4 +226,30 @@ func (s *UserService) UpdateProfileByID(ctx context.Context, body *dto.UpdatePat
 	}
 
 	return result.(*dto.UpdatePatientProfileResponseDto), nil
+}
+
+func (s *UserService) GetDoctorsByIDs(ctx context.Context, doctorIDs []string) ([]*dto.GetDoctorProfileResponseDto, error) {
+	doctors, err := s.userRepository.FindManyDoctorsByIDs(ctx, doctorIDs)
+	if err != nil {
+		return nil, apperr.New(apperr.CodeInternal, "failed to find doctors", err)
+	}
+	var result []*dto.GetDoctorProfileResponseDto
+	for _, user := range doctors {
+		if user.Doctor == nil {
+			continue
+		}
+		doctorDto := &dto.GetDoctorProfileResponseDto{
+			ID:              user.ID.String(),
+			FirstName:       user.FirstName,
+			LastName:        user.LastName,
+			Gender:          user.Gender,
+			PhoneNumber:     user.PhoneNumber,
+			Username:        user.Doctor.Username,
+			Specialty:       user.Doctor.Specialty,
+			Bio:             user.Doctor.Bio,
+			YearsExperience: user.Doctor.YearsExperience,
+		}
+		result = append(result, doctorDto)
+	}
+	return result, nil
 }

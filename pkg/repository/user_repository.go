@@ -41,7 +41,7 @@ func (r *UserRepository) withTx(tx *gorm.DB) *UserRepository {
 
 func (r *UserRepository) FindByHospitalID(ctx context.Context, hospitalID string) (*models.User, error) {
 	var user models.User
-	if err := r.db.WithContext(ctx).Joins("JOIN patients ON patients.user_id = users.id").Where("patients.hospital_id = ?", hospitalID).First(&user).Error; err != nil {
+	if err := r.db.Joins("JOIN patients ON patients.user_id = users.id").Where("patients.hospital_id = ?", hospitalID).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, err
 		}
@@ -53,9 +53,7 @@ func (r *UserRepository) FindByHospitalID(ctx context.Context, hospitalID string
 func (r *UserRepository) FindPatientByID(ctx context.Context, id string) (*models.User, error) {
 	var user models.User
 	if err := r.db.WithContext(ctx).Preload("Patient").Where("id = ?", id).First(&user).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, err
-		}
+		return nil, err
 
 	}
 	return &user, nil
@@ -65,9 +63,7 @@ func (r *UserRepository) FindPatientByID(ctx context.Context, id string) (*model
 func (r *UserRepository) FindDoctorByID(ctx context.Context, id string) (*models.User, error) {
 	var user models.User
 	if err := r.db.WithContext(ctx).Preload("Doctor").Where("id = ?", id).First(&user).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, err
-		}
+		return nil, err
 	}
 	return &user, nil
 }
@@ -110,4 +106,12 @@ func (r *UserRepository) UpdatePatient(ctx context.Context, patient *models.Pati
 		return err
 	}
 	return nil
+}
+
+func (r *UserRepository) FindManyDoctorsByIDs(ctx context.Context, doctorIDs []string) ([]*models.User, error) {
+	var doctors []*models.User
+	if err := r.db.WithContext(ctx).Preload("Doctor").Where("id IN ?", doctorIDs).Find(&doctors).Error; err != nil {
+		return nil, err
+	}
+	return doctors, nil
 }

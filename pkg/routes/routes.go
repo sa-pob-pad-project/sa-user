@@ -28,5 +28,5 @@ func SetupRoutes(app *fiber.App, userHandler *handlers.UserHandler, jwtSvc *jwt.
 	v1.Patch("/patient", userHandler.UpdatePatientProfile)
 
 	v1.Get("/patient/:id", userHandler.GetPatientByID)
-	v1.Get("/doctor/:id", userHandler.GetDoctorByID)
+	v1.Post("/doctors", userHandler.GetDoctorByIDs)
 }

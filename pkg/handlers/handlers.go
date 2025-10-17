@@ -116,11 +116,15 @@ func (h *UserHandler) Profile(c *fiber.Ctx) error {
 // @Router /api/user/v1/patient/me [put]
 func (h *UserHandler) UpdatePatientProfile(c *fiber.Ctx) error {
 	var body dto.UpdatePatientProfileRequestDto
+	fmt.Println("Hello from updatepatient profile")
 	if err := c.BodyParser(&body); err != nil {
 		return response.BadRequest(c, "Invalid request body "+err.Error())
 	}
-
+	fmt.Println("geting context")
 	ctx := contextUtils.GetContext(c)
+	// print ctx for debugging
+	fmt.Println("UpdatePatientProfile endpoint hit, ctx:", ctx)
+
 	res, err := h.userService.UpdateProfileByID(ctx, &body)
 	if err != nil {
 		return apperr.WriteError(c, err)
@@ -158,18 +162,20 @@ func (h *UserHandler) GetPatientByID(c *fiber.Ctx) error {
 // @Accept  json
 // @Produce  json
 // @Param id path string true "Doctor ID"
-// @Success 200 {object} dto.GetDoctorProfileResponseDto "Doctor profile retrieved successfully"
+// @Success 200 {object} []dto.GetDoctorProfileResponseDto "Doctor profile retrieved successfully"
 // @Failure 404 {object} response.ErrorResponse "Doctor not found"
 // @Failure 500 {object} response.ErrorResponse "Failed to get doctor profile"
 // @Router /api/user/v1/doctor/{id} [get]
-func (h *UserHandler) GetDoctorByID(c *fiber.Ctx) error {
-	doctorID := c.Params("id")
-	fmt.Println("GetDoctorByID endpoint hit, doctorID:", doctorID)
+func (h *UserHandler) GetDoctorByIDs(c *fiber.Ctx) error {
+	var body dto.GetDoctorsByIDsRequestDto
+	if err := c.BodyParser(&body); err != nil {
+		return response.BadRequest(c, "Invalid request body "+err.Error())
+	}
 
 	ctx := contextUtils.GetContext(c)
-	doctor, err := h.userService.GetDoctorByID(ctx, doctorID)
+	doctors, err := h.userService.GetDoctorsByIDs(ctx, body.DoctorIDs)
 	if err != nil {
 		return apperr.WriteError(c, err)
 	}
-	return response.OK(c, doctor)
+	return response.OK(c, doctors)
 }
