@@ -22,6 +22,7 @@ func SetupRoutes(app *fiber.App, userHandler *handlers.UserHandler, jwtSvc *jwt.
 	v1.Post("/patient/register",
 		userHandler.PatientRegister) // TODO add validation middleware
 	v1.Post("/patient/login", userHandler.PatientLogin)
+	v1.Post("/doctor/login", userHandler.DoctorLogin)
 
 	v1.Use(middleware.JwtMiddleware(jwtSvc))
 	v1.Get("/patient/me", userHandler.Profile)

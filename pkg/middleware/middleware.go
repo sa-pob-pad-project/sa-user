@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"user-service/pkg/jwt"
 
 	"github.com/gofiber/fiber/v2"
@@ -8,7 +9,7 @@ import (
 
 func JwtMiddleware(jwtService *jwt.JwtService) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		// get cookie named "access_token"
+
 		token := c.Cookies("access_token")
 		if token == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{

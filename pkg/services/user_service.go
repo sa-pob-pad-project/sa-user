@@ -98,6 +98,30 @@ func (s *UserService) PatientLogin(ctx context.Context, body *dto.PatientLoginRe
 	}, nil
 }
 
+func (s *UserService) DoctorLogin(ctx context.Context, body *dto.DoctorLoginRequestDto) (*dto.DoctorLoginResponseDto, error) {
+	user, err := s.userRepository.FindByUsername(ctx, body.Username)
+	if err != nil {
+		return nil, apperr.New(apperr.CodeInternal, "failed to find user", err)
+	}
+	fmt.Println("user", user)
+	if user == nil {
+		return nil, apperr.New(apperr.CodeUnauthorized, "invalid credentials", nil)
+	}
+	ok, err := utils.VerifyPassword(body.Password, user.Password)
+	if !ok || err != nil {
+		return nil, apperr.New(apperr.CodeUnauthorized, "invalid credentials", err)
+	}
+	// sign token
+	token, err := s.jwtService.GenerateToken(user.ID.String(), constants.RoleDoctor)
+	if err != nil {
+		return nil, apperr.New(apperr.CodeInternal, "failed to generate token", err)
+	}
+	return &dto.DoctorLoginResponseDto{
+		AccessToken: token,
+	}, nil
+
+}
+
 func (s *UserService) GetProfileByID(ctx context.Context) (*dto.GetProfileResponseDto, error) {
 	userID := contextUtils.GetUserId(ctx)
 	user, err := s.userRepository.FindPatientByID(ctx, userID)

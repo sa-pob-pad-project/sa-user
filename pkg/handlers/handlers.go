@@ -81,6 +81,27 @@ func (h *UserHandler) PatientLogin(c *fiber.Ctx) error {
 	return response.OK(c, res)
 }
 
+
+func (h *UserHandler) DoctorLogin(c *fiber.Ctx) error {
+	var body dto.DoctorLoginRequestDto
+	if err := c.BodyParser(&body); err != nil {
+		return response.BadRequest(c, "Invalid request body "+err.Error())
+	}
+	ctx := contextUtils.GetContext(c)
+	res, err := h.userService.DoctorLogin(ctx, &body)
+	if err != nil {
+		return apperr.WriteError(c, err)
+	}
+	// set token in cookie
+	c.Cookie(&fiber.Cookie{
+		Name:     "access_token",
+		Value:    res.AccessToken,
+		HTTPOnly: true,
+		SameSite: "None",
+	})
+	return response.OK(c, res)
+}
+
 // Profile godoc
 // @Summary Get patient profile
 // @Description Get the profile information of the authenticated patient

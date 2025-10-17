@@ -127,7 +127,7 @@ func main() {
 	port := config.Get("APP_PORT", "8000")
 	fmt.Println("Server is running on port " + port)
 	// listen on all interfaces for containerized envs; change back to "localhost:"+port if desired
-	if err := app.Listen(":" + port); err != nil {
+	if err := app.Listen("localhost:" + port); err != nil {
 		log.Fatal(err)
 	}
 }

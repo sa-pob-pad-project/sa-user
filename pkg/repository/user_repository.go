@@ -41,7 +41,18 @@ func (r *UserRepository) withTx(tx *gorm.DB) *UserRepository {
 
 func (r *UserRepository) FindByHospitalID(ctx context.Context, hospitalID string) (*models.User, error) {
 	var user models.User
-	if err := r.db.Joins("JOIN patients ON patients.user_id = users.id").Where("patients.hospital_id = ?", hospitalID).First(&user).Error; err != nil {
+	if err := r.db.WithContext(ctx).Joins("JOIN patients ON patients.user_id = users.id").Where("patients.hospital_id = ?", hospitalID).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, err
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *UserRepository) FindByUsername(ctx context.Context, username string) (*models.User, error) {
+	var user models.User
+	if err := r.db.WithContext(ctx).Joins("JOIN doctors ON doctors.user_id = users.id").Where("doctors.username = ?", username).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, err
 		}
