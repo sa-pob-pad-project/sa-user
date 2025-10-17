@@ -338,27 +338,13 @@ func (s *UserService) GetDoctorsByIDs(ctx context.Context, doctorIDs []string) (
 	if len(doctorIDs) == 0 {
 		return []*dto.GetDoctorProfileResponseDto{}, nil
 	}
-
-	users, err := s.userRepository.FindManyByIDs(ctx, doctorIDs)
-	if err != nil {
-		return nil, apperr.New(apperr.CodeInternal, "failed to find users", err)
-	}
-
-	doctors, err := s.doctorRepository.FindManyByIDs(ctx, doctorIDs)
+	doctors, err := s.userRepository.FindManyDoctorsByIDs(ctx, doctorIDs)
 	if err != nil {
 		return nil, apperr.New(apperr.CodeInternal, "failed to find doctors", err)
 	}
-
-	// Create a map for quick lookup
-	doctorMap := make(map[string]*models.Doctor)
-	for _, doctor := range doctors {
-		doctorMap[doctor.UserID.String()] = doctor
-	}
-
 	var result []*dto.GetDoctorProfileResponseDto
-	for _, user := range users {
-		doctor, ok := doctorMap[user.ID.String()]
-		if !ok {
+	for _, user := range doctors {
+		if user.Doctor == nil {
 			continue
 		}
 		doctorDto := &dto.GetDoctorProfileResponseDto{
@@ -367,10 +353,10 @@ func (s *UserService) GetDoctorsByIDs(ctx context.Context, doctorIDs []string) (
 			LastName:        user.LastName,
 			Gender:          user.Gender,
 			PhoneNumber:     user.PhoneNumber,
-			Username:        doctor.Username,
-			Specialty:       doctor.Specialty,
-			Bio:             doctor.Bio,
-			YearsExperience: doctor.YearsExperience,
+			Username:        user.Doctor.Username,
+			Specialty:       user.Doctor.Specialty,
+			Bio:             user.Doctor.Bio,
+			YearsExperience: user.Doctor.YearsExperience,
 		}
 		result = append(result, doctorDto)
 	}
@@ -381,27 +367,13 @@ func (s *UserService) GetPatientsByIDs(ctx context.Context, patientIDs []string)
 	if len(patientIDs) == 0 {
 		return []*dto.GetProfileResponseDto{}, nil
 	}
-
-	users, err := s.userRepository.FindManyByIDs(ctx, patientIDs)
-	if err != nil {
-		return nil, apperr.New(apperr.CodeInternal, "failed to find users", err)
-	}
-
-	patients, err := s.patientRepository.FindManyByIDs(ctx, patientIDs)
+	patients, err := s.userRepository.FindManyPatientsByIDs(ctx, patientIDs)
 	if err != nil {
 		return nil, apperr.New(apperr.CodeInternal, "failed to find patients", err)
 	}
-
-	// Create a map for quick lookup
-	patientMap := make(map[string]*models.Patient)
-	for _, patient := range patients {
-		patientMap[patient.UserID.String()] = patient
-	}
-
 	var result []*dto.GetProfileResponseDto
-	for _, user := range users {
-		patient, ok := patientMap[user.ID.String()]
-		if !ok {
+	for _, user := range patients {
+		if user.Patient == nil {
 			continue
 		}
 		patientDto := &dto.GetProfileResponseDto{
@@ -410,13 +382,13 @@ func (s *UserService) GetPatientsByIDs(ctx context.Context, patientIDs []string)
 			LastName:         user.LastName,
 			Gender:           user.Gender,
 			PhoneNumber:      user.PhoneNumber,
-			HospitalID:       patient.HospitalID,
-			BirthDate:        patient.BirthDate,
-			IDCardNumber:     patient.IDCardNumber,
-			Address:          patient.Address,
-			Allergies:        patient.Allergies,
-			EmergencyContact: patient.EmergencyContact,
-			BloodType:        patient.BloodType,
+			HospitalID:       user.Patient.HospitalID,
+			BirthDate:        user.Patient.BirthDate,
+			IDCardNumber:     user.Patient.IDCardNumber,
+			Address:          user.Patient.Address,
+			Allergies:        user.Patient.Allergies,
+			EmergencyContact: user.Patient.EmergencyContact,
+			BloodType:        user.Patient.BloodType,
 		}
 		result = append(result, patientDto)
 	}
