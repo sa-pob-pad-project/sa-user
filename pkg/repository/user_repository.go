@@ -115,3 +115,11 @@ func (r *UserRepository) FindManyDoctorsByIDs(ctx context.Context, doctorIDs []s
 	}
 	return doctors, nil
 }
+
+func (r *UserRepository) FindManyPatientsByIDs(ctx context.Context, patientIDs []string) ([]*models.User, error) {
+	var patients []*models.User
+	if err := r.db.WithContext(ctx).Preload("Patient").Where("id IN ?", patientIDs).Find(&patients).Error; err != nil {
+		return nil, err
+	}
+	return patients, nil
+}

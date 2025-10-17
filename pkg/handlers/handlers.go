@@ -155,17 +155,17 @@ func (h *UserHandler) GetPatientByID(c *fiber.Ctx) error {
 	return response.OK(c, patient)
 }
 
-// GetDoctorByID godoc
-// @Summary Get doctor by ID
-// @Description Get doctor profile information by doctor ID
+// GetDoctorByIDs godoc
+// @Summary Get doctors by IDs
+// @Description Get multiple doctor profiles by their IDs
 // @Tags doctors
 // @Accept  json
 // @Produce  json
-// @Param id path string true "Doctor ID"
-// @Success 200 {object} []dto.GetDoctorProfileResponseDto "Doctor profile retrieved successfully"
-// @Failure 404 {object} response.ErrorResponse "Doctor not found"
-// @Failure 500 {object} response.ErrorResponse "Failed to get doctor profile"
-// @Router /api/user/v1/doctor/{id} [get]
+// @Param body body dto.GetDoctorsByIDsRequestDto true "Doctor IDs"
+// @Success 200 {object} []dto.GetDoctorProfileResponseDto "Doctor profiles retrieved successfully"
+// @Failure 404 {object} response.ErrorResponse "Doctors not found"
+// @Failure 500 {object} response.ErrorResponse "Failed to get doctor profiles"
+// @Router /api/user/v1/doctors [post]
 func (h *UserHandler) GetDoctorByIDs(c *fiber.Ctx) error {
 	var body dto.GetDoctorsByIDsRequestDto
 	if err := c.BodyParser(&body); err != nil {
@@ -178,4 +178,29 @@ func (h *UserHandler) GetDoctorByIDs(c *fiber.Ctx) error {
 		return apperr.WriteError(c, err)
 	}
 	return response.OK(c, doctors)
+}
+
+// GetPatientByIDs godoc
+// @Summary Get patients by IDs
+// @Description Get multiple patient profiles by their IDs
+// @Tags patients
+// @Accept  json
+// @Produce  json
+// @Param body body dto.GetPatientsByIDsRequestDto true "Patient IDs"
+// @Success 200 {object} []dto.GetProfileResponseDto "Patient profiles retrieved successfully"
+// @Failure 404 {object} response.ErrorResponse "Patients not found"
+// @Failure 500 {object} response.ErrorResponse "Failed to get patient profiles"
+// @Router /api/user/v1/patients [post]
+func (h *UserHandler) GetPatientByIDs(c *fiber.Ctx) error {
+	var body dto.GetPatientsByIDsRequestDto
+	if err := c.BodyParser(&body); err != nil {
+		return response.BadRequest(c, "Invalid request body "+err.Error())
+	}
+
+	ctx := contextUtils.GetContext(c)
+	patients, err := h.userService.GetPatientsByIDs(ctx, body.PatientIDs)
+	if err != nil {
+		return apperr.WriteError(c, err)
+	}
+	return response.OK(c, patients)
 }
