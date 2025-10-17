@@ -59,6 +59,36 @@
             }
         },
         "/api/user/v1/doctors": {
+            "get": {
+                "description": "Get all doctor profiles from the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "doctors"
+                ],
+                "summary": "Get all doctors",
+                "responses": {
+                    "200": {
+                        "description": "Doctor profiles retrieved successfully",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/user-service_pkg_dto.GetDoctorProfileResponseDto"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to get doctor profiles",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Get multiple doctor profiles by their IDs",
                 "consumes": [

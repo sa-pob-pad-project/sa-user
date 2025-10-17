@@ -212,3 +212,21 @@ func (h *UserHandler) GetPatientByIDs(c *fiber.Ctx) error {
 	}
 	return response.OK(c, patients)
 }
+
+// GetAllDoctors godoc
+// @Summary Get all doctors
+// @Description Get all doctor profiles from the system
+// @Tags doctors
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} []dto.GetDoctorProfileResponseDto "Doctor profiles retrieved successfully"
+// @Failure 500 {object} response.ErrorResponse "Failed to get doctor profiles"
+// @Router /api/user/v1/doctors [get]
+func (h *UserHandler) GetAllDoctors(c *fiber.Ctx) error {
+	ctx := contextUtils.GetContext(c)
+	doctors, err := h.userService.GetAllDoctors(ctx)
+	if err != nil {
+		return apperr.WriteError(c, err)
+	}
+	return response.OK(c, doctors)
+}

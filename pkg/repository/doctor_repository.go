@@ -76,3 +76,11 @@ func (r *DoctorRepository) FindManyByIDs(ctx context.Context, doctorIDs []string
 	}
 	return doctors, nil
 }
+
+func (r *DoctorRepository) FindAll(ctx context.Context) ([]*models.Doctor, error) {
+	var doctors []*models.Doctor
+	if err := r.db.WithContext(ctx).Preload("User").Find(&doctors).Error; err != nil {
+		return nil, err
+	}
+	return doctors, nil
+}

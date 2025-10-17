@@ -208,6 +208,26 @@ paths:
       tags:
       - doctors
   /api/user/v1/doctors:
+    get:
+      consumes:
+      - application/json
+      description: Get all doctor profiles from the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Doctor profiles retrieved successfully
+          schema:
+            items:
+              $ref: '#/definitions/user-service_pkg_dto.GetDoctorProfileResponseDto'
+            type: array
+        "500":
+          description: Failed to get doctor profiles
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Get all doctors
+      tags:
+      - doctors
     post:
       consumes:
       - application/json

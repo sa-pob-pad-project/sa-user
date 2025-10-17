@@ -394,3 +394,26 @@ func (s *UserService) GetPatientsByIDs(ctx context.Context, patientIDs []string)
 	}
 	return result, nil
 }
+
+func (s *UserService) GetAllDoctors(ctx context.Context) ([]*dto.GetDoctorProfileResponseDto, error) {
+	doctors, err := s.doctorRepository.FindAll(ctx)
+	if err != nil {
+		return nil, apperr.New(apperr.CodeInternal, "failed to find doctors", err)
+	}
+	var result []*dto.GetDoctorProfileResponseDto
+	for _, doctor := range doctors {
+		doctorDto := &dto.GetDoctorProfileResponseDto{
+			ID:              doctor.User.ID.String(),
+			FirstName:       doctor.User.FirstName,
+			LastName:        doctor.User.LastName,
+			Gender:          doctor.User.Gender,
+			PhoneNumber:     doctor.User.PhoneNumber,
+			Username:        doctor.Username,
+			Specialty:       doctor.Specialty,
+			Bio:             doctor.Bio,
+			YearsExperience: doctor.YearsExperience,
+		}
+		result = append(result, doctorDto)
+	}
+	return result, nil
+}
