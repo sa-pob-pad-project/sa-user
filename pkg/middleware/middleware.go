@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"user-service/pkg/jwt"
 
 	"github.com/gofiber/fiber/v2"
