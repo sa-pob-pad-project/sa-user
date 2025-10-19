@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 services:
   sa_user_postgres:
     image: postgres:17
@@ -15,6 +15,8 @@ services:
       interval: 3s
       timeout: 2s
       retries: 20
+    networks:
+      - default
 
   sa_user:
     image: sa_user:latest
@@ -30,7 +32,12 @@ services:
       - DB_HOST=sa_user_postgres
       - DB_PORT=5432
 
+    networks:
+      - default
+      - sa_gateway_net
+
 networks:
   default:
     driver: bridge
-
+  sa_gateway_net:
+    external: true
