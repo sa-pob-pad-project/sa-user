@@ -47,7 +47,7 @@ func migrateUp(sqlDB *sql.DB) error {
 // @title User API
 // @description This is a sample server for a user API.
 // @version 1.0
-// @host localhost:8080
+// @host localhost:5000
 // @BasePath /
 // @schemes http
 // @securityDefinitions.apikey ApiKeyAuth
