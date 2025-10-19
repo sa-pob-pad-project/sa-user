@@ -15,8 +15,9 @@ import (
 func SetupRoutes(app *fiber.App, userHandler *handlers.UserHandler, jwtSvc *jwt.JwtService) {
 
 	api := app.Group("/api")
-	api.Get("/swagger/*", swagger.HandlerDefault)
 	user := api.Group("/user")
+	user.Get("/swagger/*", swagger.HandlerDefault)
+
 	v1 := user.Group("/v1")
 
 	v1.Post("/patient/register",
