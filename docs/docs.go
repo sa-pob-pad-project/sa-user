@@ -140,6 +140,63 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/user/v1/patient": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update the profile information of the authenticated patient",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "patients"
+                ],
+                "summary": "Update patient profile",
+                "parameters": [
+                    {
+                        "description": "Patient profile update data",
+                        "name": "patient",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdatePatientProfileRequestDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdatePatientProfileResponseDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or user not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing token",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to update user profile",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/user/v1/patient/login": {
             "post": {
                 "description": "Authenticate a patient and return access token",
@@ -219,61 +276,6 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Failed to get user profile",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update the profile information of the authenticated patient",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "patients"
-                ],
-                "summary": "Update patient profile",
-                "parameters": [
-                    {
-                        "description": "Patient profile update data",
-                        "name": "patient",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdatePatientProfileRequestDto"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Profile updated successfully",
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdatePatientProfileResponseDto"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request body or user not found",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized - Invalid or missing token",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Failed to update user profile",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }

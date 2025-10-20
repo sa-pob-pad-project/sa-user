@@ -259,6 +259,42 @@ paths:
       summary: Get doctors by IDs
       tags:
       - doctors
+  /api/user/v1/patient:
+    patch:
+      consumes:
+      - application/json
+      description: Update the profile information of the authenticated patient
+      parameters:
+      - description: Patient profile update data
+        in: body
+        name: patient
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdatePatientProfileRequestDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Profile updated successfully
+          schema:
+            $ref: '#/definitions/dto.UpdatePatientProfileResponseDto'
+        "400":
+          description: Invalid request body or user not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized - Invalid or missing token
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Failed to update user profile
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update patient profile
+      tags:
+      - patients
   /api/user/v1/patient/login:
     post:
       consumes:
@@ -312,41 +348,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get patient profile
-      tags:
-      - patients
-    patch:
-      consumes:
-      - application/json
-      description: Update the profile information of the authenticated patient
-      parameters:
-      - description: Patient profile update data
-        in: body
-        name: patient
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UpdatePatientProfileRequestDto'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Profile updated successfully
-          schema:
-            $ref: '#/definitions/dto.UpdatePatientProfileResponseDto'
-        "400":
-          description: Invalid request body or user not found
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "401":
-          description: Unauthorized - Invalid or missing token
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "500":
-          description: Failed to update user profile
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Update patient profile
       tags:
       - patients
   /api/user/v1/patient/register:
