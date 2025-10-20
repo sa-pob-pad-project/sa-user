@@ -314,7 +314,7 @@ paths:
       summary: Get patient profile
       tags:
       - patients
-    put:
+    patch:
       consumes:
       - application/json
       description: Update the profile information of the authenticated patient

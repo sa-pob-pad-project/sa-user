@@ -144,7 +144,7 @@ func (h *UserHandler) Profile(c *fiber.Ctx) error {
 // @Failure 400 {object} response.ErrorResponse "Invalid request body or user not found"
 // @Failure 401 {object} response.ErrorResponse "Unauthorized - Invalid or missing token"
 // @Failure 500 {object} response.ErrorResponse "Failed to update user profile"
-// @Router /api/user/v1/patient/me [put]
+// @Router /api/user/v1/patient/me [patch]
 func (h *UserHandler) UpdatePatientProfile(c *fiber.Ctx) error {
 	var body dto.UpdatePatientProfileRequestDto
 	fmt.Println("Hello from updatepatient profile")
